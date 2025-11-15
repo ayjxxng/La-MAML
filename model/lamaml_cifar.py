@@ -103,6 +103,10 @@ class Net(BaseNet):
                 self.M = self.M_new.copy()
                 self.current_task = t
 
+                # Add mometum reset part
+                if hasattr(self, "reset_alpha_momentum"):
+                    self.reset_alpha_momentum()
+
             batch_sz = x.shape[0]
             n_batches = self.args.cifar_batches
             rough_sz = math.ceil(batch_sz/n_batches)
