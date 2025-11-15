@@ -136,4 +136,8 @@ def get_parser():
     parser.add_argument('--fisher_gamma', default=0.95, type=float,
                         help='')
 
+    # Add momentum args.
+    parser.add_argument("--use_alpha_momentum", default=True, action='store_true')
+    parser.add_argument("--alpha_momentum", type=float, default=0.5)
+
     return parser
