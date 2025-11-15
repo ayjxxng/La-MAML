@@ -32,7 +32,13 @@ class BaseNet(torch.nn.Module):
         self.net.define_task_lr_params(alpha_init = args.alpha_init)
 
         self.opt_wt = torch.optim.SGD(list(self.net.parameters()), lr=args.opt_wt)     
-        self.opt_lr = torch.optim.SGD(list(self.net.alpha_lr.parameters()), lr=args.opt_lr) 
+                     
+        # Add mementum option
+        self.opt_lr = torch.optim.SGD(
+            self.net.alpha_lr.parameters(),
+            lr=args.opt_lr,
+            momentum=(args.alpha_momentum if args.use_alpha_momentum else 0.0),
+        )
 
         self.epoch = 0
         # allocate buffer
@@ -57,6 +63,17 @@ class BaseNet(torch.nn.Module):
 
         self.n_outputs = n_outputs
 
+    # Add momentum reset func.
+    def reset_alpha_momentum(self):
+        """Reset momentum buffers of opt_lr (call at task boundary if enabled)."""
+        if not hasattr(self, "opt_lr") or not self.args.use_alpha_momentum:
+            return
+        for group in self.opt_lr.param_groups:
+            for p in group["params"]:
+                st = self.opt_lr.state.get(p, None)
+                if st and "momentum_buffer" in st:
+                    st["momentum_buffer"].zero_()
+                    
     def push_to_mem(self, batch_x, batch_y, t):
         """
         Reservoir sampling to push subsampled stream
